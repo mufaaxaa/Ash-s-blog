@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather Forecast & Calendar</title>
+  <!-- Include Font Awesome CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      background-color: #f7f7f7;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 20px;
+    }
+    .weather-container,
+    .calendar-container {
+      width: auto;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+      text-align: center;
+      margin: 10px 0;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .weather-container.dark-mode,
+    .calendar-container.dark-mode {
+      background-color: #333;
+      color: #fff;
+    }
+    .weather-container h1,
+    .calendar-container h2 {
+      color: #333;
+      margin-bottom: 20px;
+    }
+    .weather-container.dark-mode h1,
+    .calendar-container.dark-mode h2 {
+      color: #fff;
+    }
+    .weather-container p,
+    .calendar-container p {
+      margin: 10px 0;
+      color: #666;
+    }
+    #date, #forecast, #temperature, #humidity, #wind-speed, #uv-index, #rain-forecast, #temperature-change {
+      font-weight: bold;
+      color: #009688;
+    }
+    .btn {
+      display: inline-block;
+      background-color: #009688;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 20px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.3s;
+      font-size: 16px;
+    }
+    .btn:hover {
+      background-color: #00796b;
+    }
+    .calendar {
+      margin-top: 40px;
+      max-width: 600px; /* Max width for better readability on larger screens */
+    }
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .calendar-header h2 {
+      color: #009688;
+    }
+    .calendar-body {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+    }
+    .day {
+      background-color: #e0e0e0;
+      color: #333;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .day:hover {
+      background-color: #d5d5d5;
+    }
+    .today {
+      background-color: #009688;
+      color: #fff;
+    }
+    .weekday {
+      font-weight: bold;
+    }
+    .toggle-darkmode {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: transparent;
+      color: #666;
+      border: 2px solid #666;
+      border-radius: 6px;
+      padding: 10px;
+      cursor: pointer;
+      transition: color 0.3s, border-color 0.3s;
+      outline: none;
+      font-size: 20px;
+    }
+    .toggle-darkmode:hover {
+      color: #333;
+      border-color: #333;
+    }
+    .toggle-darkmode.dark-mode {
+      color: #fff;
+      border-color: #fff;
+    }
+    .toggle-darkmode.dark-mode::before {
+      content: "\u{1F319}"; /* Unicode for moon symbol */
+    }
+    /* Custom styles for weather icons */
+    .weather-icon {
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+    .forecast-list {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .forecast-item {
+      margin: 0 10px;
+      text-align: center;
+    }
+    .forecast-item p {
+      font-size: 14px;
+    }
+
+    /* Media queries for responsive design */
+    @media only screen and (max-width: 768px) {
+      .container {
+        margin: 10px;
+      }
+      .weather-container,
+      .calendar-container {
+        padding: 100%;
+        margin: auto;
+      }
+      .calendar {
+        margin-top: justify;
+      }
+      .toggle-darkmode {
+        font-size: 18px;
+        bottom: 10px;
+        right: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="container">
+    <div class="weather-container" id="weather-container">
+      <h1>Today's Weather Forecast</h1>
+      <i class="weather-icon fas" id="weather-icon"></i>
+      <p>Date: <span id="date"></span></p>
+      <p>Weather Forecast: <span id="forecast"></span></p>
+      <p>Temperature: <span id="temperature"></span></p>
+      <p>Humidity: <span id="humidity"></span></p>
+      <p>Wind Speed: <span id="wind-speed"></span></p>
+      <p>UV Index: <span id="uv-index"></span></p>
+      <p>Rain Forecast: <span id="rain-forecast"></span></p>
+      <p>Temperature Change: <span id="temperature-change"></span></p>
+      <div class="forecast-list" id="forecast-list"></div>
+      <button class="btn" onclick="updateForecast()">Update Forecast</button>
+    </div>
+
+    <div class="calendar-container" id="calendar-container">
+      <div class="calendar">
+        <div class="calendar-header">
+          <h2>Calendar</h2>
+          <select id="month" onchange="updateCalendar()">
+            <option value="0">January</option>
+            <option value="1">February</option>
+            <option value="2">March</option>
+            <option value="3">April</option>
+            <option value="4">May</option>
+            <option value="5">June</option>
+            <option value="6">July</option>
+            <option value="7">August</option>
+            <option value="8">September</option>
+            <option value="9">October</option>
+            <option value="10">November</option>
+            <option value="11">December</option>
+          </select>
+          <select id="year" onchange="updateCalendar()">
+            <option value="2022">2022</option>
+            <option value="2023">2023</option>
+            <option value="2024">2024</option>
+            <option value="2025">2025</option>
+            <!-- Add more years as needed -->
+          </select>
+        </div>
+        <div class="calendar-body" id="calendar-body">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="toggle-darkmode" onclick="toggleDarkMode()">🌙</button>
+
+  <!-- Include Font Awesome JavaScript -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+
+  <script>
+    // Array containing weather forecasts
+    var weatherForecasts = [
+      { forecast: "Sunny", icon: "fa-sun", temperature: "25°C", humidity: "60%", windSpeed: "10 km/h", uvIndex: "Moderate", rainForecast: "10%", temperatureChange: "+2°C" },
+      { forecast: "Partly Cloudy", icon: "fa-cloud-sun", temperature: "22°C", humidity: "55%", windSpeed: "12 km/h", uvIndex: "Low", rainForecast: "5%", temperatureChange: "+1°C" },
+      { forecast: "Rainy", icon: "fa-cloud-showers-heavy", temperature: "18°C", humidity: "70%", windSpeed: "15 km/h", uvIndex: "Low", rainForecast: "80%", temperatureChange: "-3°C" },
+      { forecast: "Stormy", icon: "fa-bolt", temperature: "16°C", humidity: "75%", windSpeed: "20 km/h", uvIndex: "High", rainForecast: "90%", temperatureChange: "-5°C" },
+      { forecast: "Cloudy", icon: "fa-cloud", temperature: "20°C", humidity: "65%", windSpeed: "8 km/h", uvIndex: "Low", rainForecast: "20%", temperatureChange: "0°C" },
+      { forecast: "Mostly Sunny", icon: "fa-cloud-sun", temperature: "24°C", humidity: "58%", windSpeed: "11 km/h", uvIndex: "Moderate", rainForecast: "15%", temperatureChange: "+3°C" }
+    ];
+
+    // Get date and forecast elements from the DOM
+    var dateElement = document.getElementById("date");
+    var forecastElement = document.getElementById("forecast");
+    var temperatureElement = document.getElementById("temperature");
+    var humidityElement = document.getElementById("humidity");
+    var windSpeedElement = document.getElementById("wind-speed");
+    var uvIndexElement = document.getElementById("uv-index");
+    var rainForecastElement = document.getElementById("rain-forecast");
+    var temperatureChangeElement = document.getElementById("temperature-change");
+    var weatherIcon = document.getElementById("weather-icon");
+    var forecastList = document.getElementById("forecast-list");
+
+    // Function to update forecast
+    function updateForecast() {
+      // Get today's date
+      var todayDate = new Date().toLocaleDateString();
+      // Update text on date element
+      dateElement.textContent = todayDate;
+      // Select a random weather forecast from the array
+      var randomIndex = Math.floor(Math.random() * weatherForecasts.length);
+      var randomForecast = weatherForecasts[randomIndex];
+      // Update text on forecast elements
+      forecastElement.textContent = randomForecast.forecast;
+      temperatureElement.textContent = randomForecast.temperature;
+      humidityElement.textContent = randomForecast.humidity;
+      windSpeedElement.textContent = randomForecast.windSpeed;
+      uvIndexElement.textContent = randomForecast.uvIndex;
+      rainForecastElement.textContent = randomForecast.rainForecast;
+      temperatureChangeElement.textContent = randomForecast.temperatureChange;
+      // Update weather icon
+      weatherIcon.className = "weather-icon fas " + randomForecast.icon;
+      // Generate forecast list for next 7 days
+      forecastList.innerHTML = ""; // Clear previous forecast list
+      for (var i = 1; i <= 7; i++) {
+        var forecastItem = document.createElement("div");
+        forecastItem.classList.add("forecast-item");
+        var forecastDate = new Date();
+        forecastDate.setDate(forecastDate.getDate() + i);
+        var forecastDateString = forecastDate.toLocaleDateString();
+        var forecastWeather = weatherForecasts[Math.floor(Math.random() * weatherForecasts.length)];
+        forecastItem.innerHTML = `
+          <p>${forecastDateString}</p>
+          <i class="weather-icon fas ${forecastWeather.icon}"></i>
+          <p>${forecastWeather.forecast}</p>
+          <p>Temperature: ${forecastWeather.temperature}</p>
+          <p>Humidity: ${forecastWeather.humidity}</p>
+          <p>Wind Speed: ${forecastWeather.windSpeed}</p>
+          <p>UV Index: ${forecastWeather.uvIndex}</p>
+          <p>Rain Forecast: ${forecastWeather.rainForecast}</p>
+          <p>Temperature Change: ${forecastWeather.temperatureChange}</p>
+        `;
+        forecastList.appendChild(forecastItem);
+      }
+    }
+
+    // Call updateForecast function initially
+    updateForecast();
+
+    // Function to update calendar
+    function updateCalendar() {
+      var month = document.getElementById("month").value;
+      var year = document.getElementById("year").value;
+      var daysInMonth = new Date(year, parseInt(month) + 1, 0).getDate();
+      var firstDay = new Date(year, month, 1).getDay();
+      var calendarBody = document.getElementById("calendar-body");
+      calendarBody.innerHTML = "";
+
+      // Generate calendar days
+      var weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      for (var i = 0; i < weekdays.length; i++) {
+        var weekday = document.createElement("div");
+        weekday.classList.add("day", "weekday");
+        weekday.textContent = weekdays[i];
+        calendarBody.appendChild(weekday);
+      }
+      for (var i = 0; i < firstDay; i++) {
+        var day = document.createElement("div");
+        day.classList.add("day");
+        calendarBody.appendChild(day);
+      }
+      for (var i = 1; i <= daysInMonth; i++) {
+        var day = document.createElement("div");
+        day.classList.add("day");
+        day.textContent = i;
+        if (i == new Date().getDate() && month == new Date().getMonth() && year == new Date().getFullYear()) {
+          day.classList.add("today");
+        }
+        calendarBody.appendChild(day);
+      }
+    }
+
+    // Call updateCalendar function initially
+    updateCalendar();
+
+    // Function to toggle dark mode
+    function toggleDarkMode() {
+      var container = document.getElementById("container");
+      container.classList.toggle("dark-mode");
+      var weatherContainer = document.getElementById("weather-container");
+      var calendarContainer = document.getElementById("calendar-container");
+      weatherContainer.classList.toggle("dark-mode");
+      calendarContainer.classList.toggle("dark-mode");
+      // Change text color on dark mode toggle
+      var elements = document.querySelectorAll("#date, #forecast, #temperature, #humidity, #wind-speed, #uv-index, #rain-forecast, #temperature-change, .day, .weekday");
+      elements.forEach(function(element) {
+        element.classList.toggle("dark-mode-text");
+      });
+    }
+  </script>
+</body>
+</html>
